@@ -57,7 +57,7 @@ var startTime   = new Date().getTime();
                     })(i),
                     set: (function(i){
                         return function(value){//trigger updated
-                            noticeUpdated.call(this, i, _array[i]);
+                            noticeUpdated.call(this, i, _array[i],value);
                             _array[i]   = value;
                         }
                     })(i)
