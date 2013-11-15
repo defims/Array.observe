@@ -11,12 +11,12 @@ if (!Array.prototype.forEach) {
 }
 
 ;(function(){
-
+var startTime   = new Date().getTime();
     var i,
         _array              = [],
         _sign               = [],
         ArrayPrototype      = Array.prototype,
-        MAX                 = 90,//Number.MAX_VALUE,//observe array's max length
+        MAX                 = 9999,//Number.MAX_VALUE,//observe array's max length, if it's too big, browser will work slow
         proto               = ObserveArray.prototype,
         defineProperty      = Object.defineProperty,
         noticeNew           = function(i, newValue){
@@ -89,29 +89,35 @@ if (!Array.prototype.forEach) {
         noticeAllNew.call(this);
     }
 
-    for(i=0;i<MAX;i++)    defineProperty(proto,i,{//[i]
-        get: (function(i){
-            return function(){//fallback for initial get
-                //console.log('get',i);
-                //after new is delete
-                if(_sign[i]){
-                    //noticeDelete(_array[i]);//delay noticeDelete
+    var i = MAX;
+    while(i--){
+        var b = i;
+        defineProperty(proto,i,{//[i]
+            /*get: (function(i){
+                return function(){//fallback for initial get
+                    //console.log('get',i);
+                    console.log('****************',arguments)
+                    //after new is delete
+                    if(_sign[i]){
+                        //noticeDelete(_array[i]);//delay noticeDelete
+                    }
+                    return _array[i];
                 }
-                return _array[i];
-            }
-        })(i),
-        set: (function(i){
-            return function(value){//fallback to trigger new
-                //console.log('set',i,arguments);
-                //set getter setter for newItem
-                console.log(arguments,this)
-                //new
-                newItem.call(this, i, value)
-                _sign[i]    = true;
-                _array[i]   = value;
-            }
-        })(i)
-    });
+            })(i),*/
+            set: (function(i){
+                return function(value){//fallback to trigger new
+                    //console.log('set',i,arguments);
+                    //set getter setter for newItem
+                    //new
+                    newItem.call(this, i, value)
+                    _sign[i]    = true;
+                    _array[i]   = value;
+                }
+            })(i)
+        });
+    }
+
+var endTime   = new Date().getTime();
     /*
      * method without notice new,updated,delete
      */
@@ -229,9 +235,18 @@ if (!Array.prototype.forEach) {
     console.log(a.toString())
     console.log(a.toLocaleString())
     console.log(a.valueOf())
+    console.log(a)
     /**/
-
-    function ArrayObserve(array, callback){
+    /*
+     * ArrayObserve
+     * ArrayObserve and prop must in the same scope
+     */
+    function ArrayObserve(prop, callback){
+        //var array   = parent[prop],
+        //    oa      = new ObserveArray(array,callback);
+        //console.log(parent,prop,a)
+        //a = new ObserveArray(a, callback);
+        eval(prop+"= new ObserveArray("+prop+",callback)")
         //var caller  = arguments.callee.caller;
         //set getter setter for parent
         //delete arr
@@ -253,12 +268,47 @@ if (!Array.prototype.forEach) {
         })*/
         //no need to observe a it self as Object.observe do
     }
-    //console.log(ObserveArray)
-    //var a = [];
-    //ArrayObserve(a,function(change){
-    //    console.log(change)
-    //})
-
-
+    window.ArrayObserve = ArrayObserve;
+    //console.log(endTime - startTime)
 })()
 
+/*
+ * test
+ *
+var path = {
+    to:{
+        array:[]
+    }
+}
+ArrayObserve('path.to.array',function(change){
+    console.log(change)
+})
+path.to.array[10] = 10
+
+/**
+ *
+var a = [1,2,3],
+    c;
+function b(){
+    Object.defineProperty(arguments,'length',{
+        get: function(){
+            console.log('get')
+        },
+        set: function(){
+            console.log('set')
+        }
+    })
+    arguments[0] = 4;
+    arguments[6] = 6;
+    arguments[10] = 10
+    a = arguments;
+    //console.log(arguments)
+};
+(function(){
+    arguments[10] = 1;
+})();
+b.apply(this,a);
+a[20] = 20;
+delete a[1]
+console.log(a);
+/**/
