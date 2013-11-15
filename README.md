@@ -10,8 +10,11 @@
     ArrayObserve('path.to.array',function(change){
         console.log(change)
     })
-    path.to.array[10] = 'new'//console.log Object {name: 10, object: ObserveArray, type: "updated", oldValue: 10, value: "update"}
-    path.to.array[10] = 'update'//console.log Object {name: 10, object: ObserveArray, type: "updated", oldValue: 10, value: "update"}
+    path.to.array[10] = 'new one'
+    //console.log Object {name: 10, object: ObserveArray, type: "new", value: "new one"}
+    
+    path.to.array[10] = 'update it'
+    //console.log Object {name: 10, object: ObserveArray, type: "updated", oldValue: "new one", value: "update it"}
 
 ## How it works
 it use defineProperty to watch Array item updating and prototype fallback for creating new item
