@@ -1,12 +1,21 @@
 <!doctype html>
 <head>
-<script src="../Array.observe.js"></script>
+    <script src="../Array.observe.js"></script>
+    <!--<style>
+        *[data-1]{
+        background:red;
+        }
+    </style>-->
 </head>
 <body>
+    <div id="parent">
+        <div data-1>dsa</div>
+    </div>
+    <div id="notice"></div>
 <script>
 /*
  * test
- */
+ *
 var path = {
     to:{
         array:[]
@@ -35,23 +44,21 @@ console.log(path.to.array.toString())
 console.log(path.to.array.toLocaleString())
 console.log(path.to.array.valueOf())
 console.log(path.to.array)
+/**/
+var el = document.querySelector('#user');
 
-//var el = document.querySelector('#user');
-
-// el.id == 'user'
-// el.dataset.id === '1234567890'
-// el.dataset.user === 'johndoe'
-// el.dataset.dateOfBirth === ''
-
-//el.dataset.dateOfBirth = '1960-10-03'; // set the DOB.
-//el.dataset[1] = 'ldfasj;'
-//delete el.dataset.dateOfBirth;
-//el.dataset['1'] = '342';
+el.id == 'user'
+el.dataset.id === '1234567890'
+el.dataset.user === 'johndoe'
+el.dataset.dateOfBirth === ''
+el.dataset.dateOfBirth = '1960-10-03'; // set the DOB.
+el.dataset.a1 = 'ldfasj;'
+delete el.dataset.dateOfBirth;
 //console.log(el.dataset[1])
-//// 'someDataAttr' in el.dataset === false
+// 'someDataAttr' in el.dataset === false
 //document.write( document.getElementById('parent').innerHTML);
 //el.dataset.someDataAttr = 'mydata';
-//// 'someDataAttr' in el.dataset === true
+// 'someDataAttr' in el.dataset === true
 </script>
 </body>
 </html>

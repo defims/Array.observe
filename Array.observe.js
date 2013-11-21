@@ -1,23 +1,11 @@
-if (!Array.prototype.forEach) {
-    Array.prototype.forEach = function (fn, scope) {
-        'use strict';
-        var i, len;
-        for (i = 0, len = this.length; i < len; ++i) {
-            if (i in this) {
-                fn.call(scope, this[i], i, this);
-            }
-        }
-    };
-}
-
 ;(function(){
-var startTime   = new Date().getTime();
+//var startTime   = new Date().getTime();
     var i,
         _array              = [],
         _sign               = [],
         ArrayPrototype      = Array.prototype,
         MAX                 = 9999,//Number.MAX_VALUE,//observe array's max length, if it's too big, browser will work slow
-        proto               = ObserveArray.prototype,
+        proto               = ObservableArray.prototype,
         defineProperty      = Object.defineProperty,
         noticeNew           = function(i, newValue){
             //console.log('new',arguments,this)
@@ -69,21 +57,22 @@ var startTime   = new Date().getTime();
             noticeNew.call(this,i,value);
         },
         noticeAllDelete = function(){
-            var self = this;
-            _array.forEach(function(item, index, array){
-                //notice delete
-                noticeDelete.call(self, index, item);
-            });
+            var self = this,
+                index;
+            for(index in _array){
+                console.log(index)
+                noticeDelete.call(self, Number(index), _array[index]);
+            }
         },
         noticeAllNew = function(){
-            var self = this;
-            _array.forEach(function(item, index, array){
-                //new item
-                newItem.call(self, index,item)
-            });
+            var self = this,
+                index;
+            for(index in _array){
+                newItem.call(self, Number(index), _array[index]);
+            }
         };
 
-    function ObserveArray(array,callback){
+    function ObservableArray(array,callback){
         _array  = array;
         this.notification = callback;
         noticeAllNew.call(this);
@@ -117,27 +106,30 @@ var startTime   = new Date().getTime();
         });
     }
 
-var endTime   = new Date().getTime();
+//var endTime   = new Date().getTime();
     /*
      * method without notice new,updated,delete
      */
-    ['slice','concat','join','toSource','toString','toLocaleString','valueOf'].forEach(function(item, index, array){
+    var arr = ['slice','concat','join','toSource','toString','toLocaleString','valueOf'],
+        index,item;
+    for(index in arr){
+        item = arr[index];
         proto[item] = (function(item){
             return function(){
                 //console.log('buid-in method',item);
                 return ArrayPrototype[item].apply(_array,arguments);
             }
         })(item);
-    });
+    };
     /*
      * =pop
      */
     proto.pop = function(){
         //console.log('buid-in method','pop');
         //
-        var i = _array.length;
+        var i = _array.length - 1;
         //notice delete
-        noticeDelete.call(this, i, _array[i-1]);
+        noticeDelete.call(this, i, _array[i]);
         return ArrayPrototype.pop.apply(_array,arguments);
     }
     /*
@@ -188,15 +180,16 @@ var endTime   = new Date().getTime();
         //console.log('buid-in method','splice');
         var insert  = Array.prototype.slice.call(arguments, 2),
             deleted = Array.prototype.splice.apply(_array, arguments),
-            self    = this;
-        deleted.forEach(function(item, index, array){
+            self    = this,
+            index;
+        for(index in deleted){
             //notice delete
-            noticeDelete.call(self, index, item);
-        });
-        insert.forEach(function(item, index, array){
+            noticeDelete.call(self, index, deleted[index]);
+        };
+        for(index in insert){
             //notice add
-            newItem.call(self, index, item);
-        });
+            newItem.call(self, index, insert[index]);
+        };
         return deleted;
     }
     /*
@@ -212,7 +205,7 @@ var endTime   = new Date().getTime();
     /*
      * test
      *
-    var a = new ObserveArray([1,2,3],function(change){
+    var a = new ObservableArray([1,2,3],function(change){
         console.log(change)
     });
     a[3]    = 'val';
@@ -241,33 +234,37 @@ var endTime   = new Date().getTime();
      * ArrayObserve
      * ArrayObserve and prop must in the same scope
      */
-    function ArrayObserve(prop, callback){
+    function ArrayObserve(obj, prop, callback){
         //var array   = parent[prop],
-        //    oa      = new ObserveArray(array,callback);
+        //    oa      = new ObservableArray(array,callback);
         //console.log(parent,prop,a)
-        //a = new ObserveArray(a, callback);
-        eval(prop+"= new ObserveArray("+prop+",callback)")
+        //a = new ObservableArray(a, callback);
+        //console.log(this)
+        //eval("console.log(prop,"+prop+")")
+        //eval(prop+"= new ObservableArray("+prop+",callback)");
+
         //var caller  = arguments.callee.caller;
         //set getter setter for parent
         //delete arr
         //if(caller == null){//window
         //}else{//function
         //}
-        /*
-        var arr     = parent[name],
-            _arr    = [],
-            observeArray    = new ObserveArray(function(change){
-            });
-        Object.defineProperty(parent,name,{
-            get: function(){
-                return observeArray;
-            },
-            set: function(){//arr =
-                //notice new
-            }
-        })*/
+        obj[prop]   = new ObservableArray(obj[prop],callback);
+        //var arr     = parent[name],
+        //    _arr    = [],
+        //    observeArray    = new ObservableArray(function(change){
+        //    });
+        //Object.defineProperty(parent,name,{
+        //    get: function(){
+        //        return observeArray;
+        //    },
+        //    set: function(){//arr =
+        //        //notice new
+        //    }
+        //})
         //no need to observe a it self as Object.observe do
     }
+    //window.ObservableArray = ObservableArray;
     window.ArrayObserve = ArrayObserve;
     //console.log(endTime - startTime)
 })()
