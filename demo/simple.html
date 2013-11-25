@@ -12,16 +12,19 @@
         <div data-1>dsa</div>
     </div>
     <div id="notice"></div>
+    <script>
+</script>
 <script>
+
 /*
  * test
- *
+ */
 var path = {
     to:{
         array:[]
     }
 };
-ArrayObserve('path.to.array',function(change){
+ArrayObserve(path.to,'array',function(change){
     console.log(change)
 })
 path.to.array[10] = 'new one'
@@ -42,18 +45,18 @@ console.log(path.to.array.concat([3]))//return a new normal array
 console.log(path.to.array.join(' '))
 console.log(path.to.array.toString())
 console.log(path.to.array.toLocaleString())
-console.log(path.to.array.valueOf())
-console.log(path.to.array)
+//console.log(path.to.array.valueOf())
+//console.log(path.to.array)
 /**/
-var el = document.querySelector('#user');
-
-el.id == 'user'
-el.dataset.id === '1234567890'
-el.dataset.user === 'johndoe'
-el.dataset.dateOfBirth === ''
-el.dataset.dateOfBirth = '1960-10-03'; // set the DOB.
-el.dataset.a1 = 'ldfasj;'
-delete el.dataset.dateOfBirth;
+//var el = document.querySelector('#user');
+//
+//el.id == 'user'
+//el.dataset.id === '1234567890'
+//el.dataset.user === 'johndoe'
+//el.dataset.dateOfBirth === ''
+//el.dataset.dateOfBirth = '1960-10-03'; // set the DOB.
+//el.dataset.a1 = 'ldfasj;'
+//delete el.dataset.dateOfBirth;
 //console.log(el.dataset[1])
 // 'someDataAttr' in el.dataset === false
 //document.write( document.getElementById('parent').innerHTML);
