@@ -30,26 +30,21 @@
                 "value"     : newValue
             })
         },
-        genGetterSetter     = function(i){
-            try{
-                defineProperty(this,i,{
-                    get: (function(i){
-                        return function(){//get value
-                            return _array[i];
-                        }
-                    })(i),
-                    set: (function(i){
-                        return function(value){//trigger updated
-                            noticeUpdated.call(this, i, _array[i],value);
-                            _array[i]   = value;
-                        }
-                    })(i)
-                })
-            }catch(e){}
-        },
         newItem             = function(i,value){
             _array[i] = value;
-            genGetterSetter.call(this,i);
+            //genGetterSetter.call(this,i);
+            try{
+                defineProperty(this,i,{
+                   get: function(){//get value
+                        return _array[i];
+                    },
+                    set: function(value){//trigger updated
+                        noticeUpdated.call(this, i, _array[i],value);
+                        _array[i]   = value;
+                    }
+                })
+            }catch(e){}
+
             noticeNew.call(this,i,value);
         },
         noticeAllDelete = function(){
@@ -80,22 +75,39 @@
         /*
          * =[i]
          */
-        while(i--){
-            defineProperty(this,i,{//[i]
-                get: (function(i){
-                    return function(){//fallback for initial get
-                        //console.log('get')
-                        return _array[i];
-                    }
-                })(i),
-                set: (function(i){
-                    return function(value){//fallback to trigger new
-                        //console.log('set')
-                        newItem.call(this, i, value);
-                    }
-                })(i)
+        /*
+         * Fast Duff's Device
+         * @author Miller Medeiros <http://millermedeiros.com> 
+         * @modify Defims Loong
+         * @version 0.3 (2010/08/25)
+         */
+        function duff(process, iterations){
+            var n   = iterations % 8,
+                i   = iterations;
+            while (n--) process(i--);
+            n = (iterations * 0.125) ^ 0;
+            while (n--) {
+                process(i--);
+                process(i--);
+                process(i--);
+                process(i--);
+                process(i--);
+                process(i--);
+                process(i--);
+                process(i--);
+            };
+        };
+        //console.time('[i]')
+        var self    = this;
+        duff(function(i){
+            defineProperty(self,i,{//[i]
+                set: function(value){//fallback to trigger new
+                    newItem.call(this, i, value);
+                }
             });
-        }
+        }, MAX);
+        //console.timeEnd('[i]')
+
         /*
          * =pop
          */

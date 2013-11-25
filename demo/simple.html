@@ -21,30 +21,30 @@
  */
 var path = {
     to:{
-        array:[]
+        array:[1,2,3,4,5,6]
     }
 };
 ArrayObserve(path.to,'array',function(change){
     console.log(change)
 })
 path.to.array[10] = 'new one'
-path.to.array[10] = 'update it'
-path.to.array.push('push');
-console.log(path.to.array.pop());
-path.to.array.push('push2');
-path.to.array.reverse();
-console.log(path.to.array.shift());
-path.to.array.push(1);
-path.to.array.push(3);
-path.to.array.push(0);
-path.to.array.sort();
-path.to.array.splice(2,1,'splice');
-path.to.array.unshift('unshift');
-console.log(path.to.array.slice(1))
-console.log(path.to.array.concat([3]))//return a new normal array
-console.log(path.to.array.join(' '))
-console.log(path.to.array.toString())
-console.log(path.to.array.toLocaleString())
+//path.to.array[10] = 'update it'
+//path.to.array.push('push');
+//console.log(path.to.array.pop());
+//path.to.array.push('push2');
+//path.to.array.reverse();
+//console.log(path.to.array.shift());
+//path.to.array.push(1);
+//path.to.array.push(3);
+//path.to.array.push(0);
+//path.to.array.sort();
+//path.to.array.splice(2,1,'splice');
+//path.to.array.unshift('unshift');
+//console.log(path.to.array.slice(1))
+//console.log(path.to.array.concat([3]))//return a new normal array
+//console.log(path.to.array.join(' '))
+//console.log(path.to.array.toString())
+//console.log(path.to.array.toLocaleString())
 //console.log(path.to.array.valueOf())
 //console.log(path.to.array)
 /**/
