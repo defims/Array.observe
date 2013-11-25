@@ -1,7 +1,8 @@
 ;(function(){
     var _array              = [],
         ArrayPrototype      = Array.prototype,
-        MAX                 = 9999,//Number.MAX_VALUE,//observe array's max length, if it's too big, browser will work slow
+        defineProperty      = Object.defineProperty,
+        MAX                 = 11,//Number.MAX_VALUE,//observe array's max length, if it's too big, browser will work slow
         noticeNew           = function(i, newValue){
             //console.log('new',arguments,this)
             this.notification.call(this,{
@@ -35,7 +36,7 @@
             //genGetterSetter.call(this,i);
             try{
                 defineProperty(this,i,{
-                   get: function(){//get value
+                    get: function(){//get value
                         return _array[i];
                     },
                     set: function(value){//trigger updated
@@ -70,7 +71,6 @@
     }
     function ObservableArrayPrototype(){
         var i               = MAX,
-            defineProperty  = Object.defineProperty,
             self            = this;
         /*
          * =[i]
@@ -98,15 +98,27 @@
             };
         };
         //console.time('[i]')
-        var self    = this;
         duff(function(i){
             defineProperty(self,i,{//[i]
+                get: function(){},
                 set: function(value){//fallback to trigger new
                     newItem.call(this, i, value);
                 }
             });
         }, MAX);
         //console.timeEnd('[i]')
+
+        /**
+        for(var i= 0; i<MAX; i++){
+            (function(i){
+                defineProperty(self,i,{//[i]
+                    set: function(value){//fallback to trigger new
+                        newItem.call(this, i, value);
+                    }
+                });
+            })(i)
+        }
+        /**/
 
         /*
          * =pop
