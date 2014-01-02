@@ -7,7 +7,8 @@
             array:[]
         }
     };
-    ArrayObserve('path.to.array',function(change){
+    ArrayObserve(path.to,'array',function(change){
+
         console.log(change)
     })
     path.to.array[10] = 'new one'
