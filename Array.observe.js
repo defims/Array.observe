@@ -1,249 +1,211 @@
 ;(function(){
-    var _array              = [],
-        ArrayPrototype      = Array.prototype,
-        defineProperty      = Object.defineProperty,
-        MAX                 = 11,//Number.MAX_VALUE,//observe array's max length, if it's too big, browser will work slow
-        noticeNew           = function(i, newValue){
-            //console.log('new',arguments,this)
-            this.notification.call(this,{
-                "name"      : Number(i),
-                "object"    : this,
-                "type"      : "new",
-                "value"     : newValue
-            })
-        },
-        noticeDelete        = function(i, oldValue){
-            //console.log('delete',arguments,this)
-            this.notification.call(this,{
-                "name"      : Number(i),
-                "object"    : this,
-                "type"      : "deleted",
-                "oldValue"  : oldValue
-            })
-        },
-        noticeUpdated       = function(i, oldValue, newValue){
-            //console.log('updated',arguments,this)
-            this.notification.call(this,{
-                "name"      : Number(i),
-                "object"    : this,
-                "type"      : "updated",
-                "oldValue"  : oldValue,
-                "value"     : newValue
-            })
-        },
-        newItem             = function(i,value){
-            _array[i] = value;
-            //genGetterSetter.call(this,i);
+/*
+ * =ArrayObserve
+ * @usage   observe array obj[prop]
+ * */
+//observalbleArray prototype
+function ObservableArrayPrototype(){
+    var fallback        = this,
+        fallbackGetter  = function(){},
+        fallbackSetter  = function(i,value){//new item is created
+            var observableArray = this,
+                originArray     = observableArray.__originArray__,
+                callback        = observableArray.__callback__;
             try{
-                defineProperty(this,i,{
-                    get: function(){//get value
-                        return _array[i];
-                    },
-                    set: function(value){//trigger updated
-                        noticeUpdated.call(this, i, _array[i],value);
-                        _array[i]   = value;
+                Object.defineProperty(observableArray, 'length',{
+                    get: function(){ return originArray.length },
+                    set: function(value){
+                        //sync originArray and array hook
+                        var originLength    = originArray.length;
+                        if(originLength > value){//delete
+                            var p1  = 0,
+                                p2  = 0,
+                                result  = [],
+                                i,len,oldValue;
+                            while(p1<originArray.length){
+                                if(originArray[p1] == observableArray[p2]){
+                                    p1++;
+                                    p2++;
+                                }else{
+                                    result.push(p1);
+                                    p1++;
+                                }
+                            }
+                            for(i=0,len=result.length; i<len; i++){
+                                index       = result[i];
+                                oldValue    = originArray[index];
+                                originArray.splice(index,1);
+                                delete observableArray[index];//prepare for new
+                                callback.call(observableArray,{
+                                    "name"      : index,
+                                    "object"    : observableArray,
+                                    "type"      : "deleted",
+                                    "oldValue"  : oldValue
+                                })
+                            }
+                            originArray.splice(index,1);
+                        }
                     }
                 })
             }catch(e){}
-
-            noticeNew.call(this,i,value);
-        },
-        noticeAllDelete = function(){
-            var self = this,
-                index;
-            for(index in _array){
-                console.log(index)
-                noticeDelete.call(self, index, _array[index]);
-            }
-        },
-        noticeAllNew = function(){
-            var self = this,
-                index;
-            for(index in _array){
-                newItem.call(self, index, _array[index]);
-            }
-        };
-
-    function ObservableArray(array, callback){
-        _array  = array;
-        this.notification = callback;
-        noticeAllNew.call(this);
-    }
-    function ObservableArrayPrototype(){
-        var i               = MAX,
-            self            = this;
-        /*
-         * =[i]
-         */
-        /*
-         * Fast Duff's Device
-         * @author Miller Medeiros <http://millermedeiros.com> 
-         * @modify Defims Loong
-         * @version 0.3 (2010/08/25)
-         */
-        function duff(process, iterations){
-            var n   = iterations % 8,
-                i   = iterations;
-            while (n--) process(i--);
-            n = (iterations * 0.125) ^ 0;
-            while (n--) {
-                process(i--);
-                process(i--);
-                process(i--);
-                process(i--);
-                process(i--);
-                process(i--);
-                process(i--);
-                process(i--);
-            };
-        };
-        //console.time('[i]')
-        duff(function(i){
-            defineProperty(self,i,{//[i]
-                get: function(){},
-                set: function(value){//fallback to trigger new
-                    newItem.call(this, i, value);
-                }
-            });
-        }, MAX);
-        //console.timeEnd('[i]')
-
-        /**
-        for(var i= 0; i<MAX; i++){
-            (function(i){
-                defineProperty(self,i,{//[i]
-                    set: function(value){//fallback to trigger new
-                        newItem.call(this, i, value);
+            //storage origin descriptor
+            //property descriptor chain
+            //set origin Array
+            originArray[i]  = value;
+            var obj         = {};
+            obj[i]          = originArray[i];
+            try{
+                Object.defineProperty(obj,i,Object.getOwnPropertyDescriptor(observableArray, i));
+            }catch(e){}
+            Object.defineProperty(observableArray,i,{//[i]
+                get: function(){//get [i]
+                    return obj[i];
+                },
+                set: function(value){//set [i]
+                    var oldValue    = originArray[i];
+                    originArray[i]  = value;
+                    if(obj[i] != value){
+                        obj[i]          = value;
+                        callback.call(observableArray,{
+                            "name"      : Number(i),
+                            "object"    : observableArray,
+                            "type"      : "updated",
+                            "oldValue"  : oldValue,
+                            "value"     : value
+                        })
                     }
-                });
-            })(i)
-        }
-        /**/
-
-        /*
-         * =pop
-         */
-        self.pop = function(){
-            var i = _array.length - 1;
-            noticeDelete.call(this, i, _array[i]);
-            return ArrayPrototype.pop.apply(_array,arguments);
-        }
-        /*
-         * =pop
-         */
-        self.pop = function(){
-            var i = _array.length - 1;
-            noticeDelete.call(this, i, _array[i]);
-            return ArrayPrototype.pop.apply(_array,arguments);
-        }
-        /*
-         * =push
-         */
-        self.push = function(){
-            var i   = _array.length;
-            newItem.call(this, i, arguments[0]);
-            return ArrayPrototype.push.apply(_array,arguments);
-        }
-        /*
-         * =reverse
-         */
-        self.reverse = function(){
-            noticeAllDelete.call(this);
-            var result = ArrayPrototype.reverse.apply(_array,arguments);
-            noticeAllNew.call(this);
-            return result;
-        }
-        /*
-         * =shift
-         */
-        self.shift= function(){
-            noticeDelete.call(this, 0, _array[0]);
-            return ArrayPrototype.shift.apply(_array,arguments);
-        }
-        /*
-         * =sort
-         */
-        self.sort= function(){
-            noticeAllDelete.call(this);
-            var deleteItem = ArrayPrototype.sort.apply(_array,arguments);
-            noticeAllNew.call(this);
-            return deleteItem;
-        }
-        /*
-         * =splice
-         */
-        self.splice= function(){
-            var insert  = ArrayPrototype.slice.call(arguments, 2),
-                deleted = ArrayPrototype.splice.apply(_array, arguments),
-                _this   = this,
-                index;
-            for(index in deleted){
-                //notice delete
-                noticeDelete.call(_this, index, deleted[index]);
-            };
-            for(index in insert){
-                //notice add
-                newItem.call(_this, index, insert[index]);
-            };
-            return deleted;
-        }
-        /*
-         * =unshift
-         */
-        self.unshift= function(){
-            var length = ArrayPrototype.unshift.apply(_array, arguments);
-            noticeAllNew.call(this);
-            return length;
-        }
+                },
+                configurable    : true,//delete command will failed, because delete command still can't be detect, and set item to undefined is equal to delete command
+                enumerable      : true
+            });
+            //notice new
+            callback.call(observableArray,{
+                "name"      : Number(i),
+                "object"    : observableArray,
+                "type"      : "new",
+                "value"     : value
+            });
+        };
+    //console.time('[i]')
+    //duff is use for large number process which is equal to this
+    //for(var i= 0; i<MAX; i++){
+    //    (function(i){//process})(i)
+    //}
+    /*
+     * Fast Duff's Device
+     * @author Miller Medeiros <http://millermedeiros.com>
+     * @modify Defims Loong
+     * @version 0.3 (2010/08/25)
+     */
+    (function(process, iterations){
+        var n   = iterations % 8,
+            i   = iterations;
+        while (n--) process(i--);
+        n = (iterations * 0.125) ^ 0;
+        while (n--) {
+            process(i--);
+            process(i--);
+            process(i--);
+            process(i--);
+            process(i--);
+            process(i--);
+            process(i--);
+            process(i--);
+        };
+    })(function(i){
+        Object.defineProperty(fallback,i-1,{//[i] fallback
+            get             : fallbackGetter,
+            set             : function(value){//fallback setter
+                fallbackSetter.call(this, i-1, value)
+            },
+            configurable    : false,
+            enumerable      : false
+        });
+    }, 9999);
+    //console.timeEnd('[i]')
+    //to normal array
+    fallback.toNormalArray   = function(){
+        var observableArray = this,
+            len             = observableArray.length,
+            result          = [],
+            i;
+        for(i=0; i<len; i++) result.push(observableArray[i]);
+        return result
+    }
+    //fixed concat
+    fallback.concat  = function(){
+        return [].concat.apply(this.toNormalArray(),arguments);
     }
 
-    ObservableArrayPrototype.prototype  = ArrayPrototype;
-    ObservableArray.prototype  = new ObservableArrayPrototype;
-
-    function ArrayObserve(obj, prop, callback){
-        obj[prop]   = new ObservableArray(obj[prop],callback);
-    }
-
-    window.ArrayObserve = ArrayObserve;
-})()
-
-/*
- * test
- *
-var path = {
-    to:{
-        array:[]
-    }
 }
-ArrayObserve('path.to.array',function(change){
-    console.log(change)
-})
-path.to.array[10] = 10
+//ObservableArrayPrototype -> Array.prototype
+ObservableArrayPrototype.prototype      = Array.prototype;
+ObservableArrayPrototype.constructor    = Array;
+//ObservableArray
+function ObservableArray(originArray, callback){
+    this.__originArray__  = originArray;
+    this.__callback__     = callback;
+}
 
-/**
- *
-var a = [1,2,3],
-    c;
-function b(){
-    Object.defineProperty(arguments,'length',{
-        get: function(){
-            console.log('get')
-        },
-        set: function(){
-            console.log('set')
-        }
-    })
-    arguments[0] = 4;
-    arguments[6] = 6;
-    arguments[10] = 10
-    a = arguments;
-    //console.log(arguments)
+//ObservableArray -> ObservableArrayPrototype
+ObservableArray.prototype   = new ObservableArrayPrototype;
+ObservableArray.constructor = ObservableArrayPrototype;
+//ArrayObserve
+function ArrayObserve(obj, prop, callback){
+    //replace origin array with observable Array
+    var originArray     = obj[prop],
+        len             = originArray.length,
+        observeArray    = new ObservableArray(originArray, callback);
+    while(len--) observeArray[len]   = originArray[len];
+    obj[prop]   = observeArray;
+    return observeArray
+}
+
+window.ArrayObserve = ArrayObserve;
+})()
+/*test*
+var obj = {
+    arr : [],
+    arr1: [1,2,3]
 };
-(function(){
-    arguments[10] = 1;
-})();
-b.apply(this,a);
-a[20] = 20;
-delete a[1]
-console.log(a);
+//ArrayObserve(obj, 'arr', function(change){
+//    console.log(change)
+//});
+ArrayObserve(obj, 'arr1', function(change){
+    console.log(change,'arr1')
+});
+console.log(obj.arr1);
+//obj.arr = [10,20]
+//obj.arr.push('first:');
+//obj.arr.push('second:');
+//obj.arr.push('third:');
+//obj.arr.pop();
+//obj.arr.unshift('forth:');
+//obj.arr.shift();
+//obj.arr[1]  ='modify';
+//obj.arr[10] ='modify';
+obj.arr1[3] = 'arr1 3';
+obj.arr1[3] = 'modify';
+obj.arr1[3] = 'modify';
+obj.arr1[4] = 'arr1 4';
+//obj.arr1.pop();
+//storage origin descriptor
+//var _obj     = {};
+//console.log(obj.arr1);
+//property descriptor chain
+//console.log(obj.arr1, _obj, Object.getOwnPropertyDescriptor(obj.arr1.prototype, 0));
+//try{
+//    Object.defineProperty(_obj,0,Object.getOwnPropertyDescriptor(obj.arr1.prototype, 0)||{});
+//}catch(e){}
+//Object.defineProperty(obj.arr1, '0', {
+//    get : function(){
+//        console.log('*get');
+//        return _obj[0]
+//    },
+//    set : function(value){
+//        console.log('*set');
+//        _obj[0] = value;
+//    }
+//});
+//obj.arr1[0] = 'oo';
 /**/
