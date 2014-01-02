@@ -17,7 +17,7 @@
     //console.log Object {name: 10, object: ObserveArray, type: "updated", oldValue: "new one", value: "update it"}
 
 ## How it works
-it use defineProperty to watch Array item updating ,a prototype fallback to watch Array item creating and a length watch for Array item deleting.
+it use defineProperty to watch Array item updating ,prototype fallback to watch Array item creating and a length watcher for Array item deleting.
 
 ## limit
 
