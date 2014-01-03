@@ -1,5 +1,38 @@
 ;(function(){
 /*
+ * =genObservableArrayItem
+ * @about   set observableArray item
+ * */
+function genObservableArrayItem(originArray, observableArray, callback, i){
+    var obj         = {};
+    obj[i]          = originArray[i];
+    try{
+        Object.defineProperty(obj,i,Object.getOwnPropertyDescriptor(observableArray, i));
+    }catch(e){}
+    Object.defineProperty(observableArray,i,{//[i]
+        get: function(){//get [i]
+            return obj[i];
+        },
+        set: function(value){//set [i]
+            var oldValue    = originArray[i];
+            originArray[i]  = value;
+            if(obj[i] != value){
+                obj[i]          = value;
+                callback.call(observableArray,{
+                    "name"      : Number(i),
+                    "object"    : observableArray,
+                    "type"      : "updated",
+                    "oldValue"  : oldValue,
+                    "value"     : value
+                })
+            }
+        },
+        configurable    : true,//delete command will failed, because delete command still can't be detect, and set item to undefined is equal to delete command
+        enumerable      : true
+    });
+
+}
+/*
  * =ArrayObserve
  * @usage   observe array obj[prop]
  * */
@@ -52,32 +85,7 @@ function ObservableArrayPrototype(){
             //property descriptor chain
             //set origin Array
             originArray[i]  = value;
-            var obj         = {};
-            obj[i]          = originArray[i];
-            try{
-                Object.defineProperty(obj,i,Object.getOwnPropertyDescriptor(observableArray, i));
-            }catch(e){}
-            Object.defineProperty(observableArray,i,{//[i]
-                get: function(){//get [i]
-                    return obj[i];
-                },
-                set: function(value){//set [i]
-                    var oldValue    = originArray[i];
-                    originArray[i]  = value;
-                    if(obj[i] != value){
-                        obj[i]          = value;
-                        callback.call(observableArray,{
-                            "name"      : Number(i),
-                            "object"    : observableArray,
-                            "type"      : "updated",
-                            "oldValue"  : oldValue,
-                            "value"     : value
-                        })
-                    }
-                },
-                configurable    : true,//delete command will failed, because delete command still can't be detect, and set item to undefined is equal to delete command
-                enumerable      : true
-            });
+            genObservableArrayItem(originArray, observableArray, callback, i);
             //notice new
             callback.call(observableArray,{
                 "name"      : Number(i),
@@ -121,7 +129,7 @@ function ObservableArrayPrototype(){
             configurable    : false,
             enumerable      : false
         });
-    }, 9999);
+    }, 13);
     //console.timeEnd('[i]')
     //to normal array
     fallback.toNormalArray   = function(){
@@ -145,6 +153,9 @@ ObservableArrayPrototype.constructor    = Array;
 function ObservableArray(originArray, callback){
     this.__originArray__  = originArray;
     this.__callback__     = callback;
+    //init originArray
+    var len = originArray.length;
+    while(len--) genObservableArrayItem(originArray, this, callback, len);
 }
 
 //ObservableArray -> ObservableArrayPrototype
@@ -154,9 +165,7 @@ ObservableArray.constructor = ObservableArrayPrototype;
 function ArrayObserve(obj, prop, callback){
     //replace origin array with observable Array
     var originArray     = obj[prop],
-        len             = originArray.length,
         observeArray    = new ObservableArray(originArray, callback);
-    while(len--) observeArray[len]   = originArray[len];
     obj[prop]   = observeArray;
     return observeArray
 }

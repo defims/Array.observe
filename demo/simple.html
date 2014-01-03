@@ -26,8 +26,9 @@ var path = {
 ArrayObserve(path.to,'array',function(change){
     console.log(change)
 })
-path.to.array[10] = 'new one'
-//path.to.array[10] = 'update it'
+console.log(path.to.array)
+path.to.array[10] = 'new one';
+path.to.array[10] = 'update it';
 //path.to.array.push('push');
 //console.log(path.to.array.pop());
 //path.to.array.push('push2');
@@ -40,8 +41,8 @@ path.to.array[10] = 'new one'
 //path.to.array.splice(2,1,'splice');
 //path.to.array.unshift('unshift');
 //console.log(path.to.array.slice(1))
-console.log(path.to.array)
-console.log(path.to.array.concat([3]))//return a new normal array
+//console.log(path.to.array)
+//console.log(path.to.array.concat([3]))//return a new normal array
 //console.log(path.to.array.join(' '))
 //console.log(path.to.array.toString())
 //console.log(path.to.array.toLocaleString())
