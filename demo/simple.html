@@ -23,13 +23,14 @@ var path = {
         array:[1,2,3,4,5,6]
     }
 };
+console.log(path.to.array)
 ArrayObserve(path.to,'array',function(change){
     console.log(change)
 })
 console.log(path.to.array)
-path.to.array[10] = 'new one';
-path.to.array[10] = 'update it';
-//path.to.array.push('push');
+//path.to.array[10] = 'new one';
+//path.to.array[10] = 'update it';
+path.to.array.push('push');
 //console.log(path.to.array.pop());
 //path.to.array.push('push2');
 //path.to.array.reverse();

@@ -9,28 +9,29 @@ function genObservableArrayItem(originArray, observableArray, callback, i){
     try{
         Object.defineProperty(obj,i,Object.getOwnPropertyDescriptor(observableArray, i));
     }catch(e){}
-    Object.defineProperty(observableArray,i,{//[i]
-        get: function(){//get [i]
-            return obj[i];
-        },
-        set: function(value){//set [i]
-            var oldValue    = originArray[i];
-            originArray[i]  = value;
-            if(obj[i] != value){
-                obj[i]          = value;
-                callback.call(observableArray,{
-                    "name"      : Number(i),
-                    "object"    : observableArray,
-                    "type"      : "updated",
-                    "oldValue"  : oldValue,
-                    "value"     : value
-                })
-            }
-        },
-        configurable    : true,//delete command will failed, because delete command still can't be detect, and set item to undefined is equal to delete command
-        enumerable      : true
-    });
-
+    (function(originArray, observableArray, callback, i){
+        Object.defineProperty(observableArray,i,{//[i]
+            get: function(){//get [i]
+                return obj[i];
+            },
+            set: function(value){//set [i]
+                var oldValue    = originArray[i];
+                originArray[i]  = value;
+                if(obj[i] != value){
+                    obj[i]          = value;
+                    callback.call(observableArray,{
+                        "name"      : Number(i),
+                        "object"    : observableArray,
+                        "type"      : "updated",
+                        "oldValue"  : oldValue,
+                        "value"     : value
+                    })
+                }
+            },
+            configurable    : true,//delete command will failed, because delete command still can't be detect, and set item to undefined is equal to delete command
+            enumerable      : true
+        });
+    })(originArray, observableArray, callback, i)
 }
 /*
  * =ArrayObserve
@@ -64,6 +65,7 @@ function ObservableArrayPrototype(){
                                     p1++;
                                 }
                             }
+                            console.log(result)
                             for(i=0,len=result.length; i<len; i++){
                                 index       = result[i];
                                 oldValue    = originArray[index];
@@ -154,8 +156,10 @@ function ObservableArray(originArray, callback){
     this.__originArray__  = originArray;
     this.__callback__     = callback;
     //init originArray
-    var len = originArray.length;
-    while(len--) genObservableArrayItem(originArray, this, callback, len);
+    var len             = originArray.length,
+        observableArray = this;
+    while(len--) genObservableArrayItem(originArray, observableArray, callback, len);
+    observableArray.length  = originArray.length;
 }
 
 //ObservableArray -> ObservableArrayPrototype
